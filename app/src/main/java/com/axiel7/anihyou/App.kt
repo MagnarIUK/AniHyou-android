@@ -11,6 +11,8 @@ import coil3.gif.AnimatedImageDecoder
 import coil3.gif.GifDecoder
 import coil3.memory.MemoryCache
 import coil3.request.crossfade
+import com.apollographql.cache.normalized.api.NormalizedCacheFactory
+import com.apollographql.cache.normalized.sql.SqlNormalizedCacheFactory
 import com.axiel7.anihyou.core.domain.dataStoreModule
 import com.axiel7.anihyou.core.domain.repositoryModule
 import com.axiel7.anihyou.core.network.apiModule
@@ -20,7 +22,14 @@ import org.koin.android.ext.koin.androidContext
 import org.koin.android.ext.koin.androidLogger
 import org.koin.androidx.workmanager.koin.workManagerFactory
 import org.koin.core.context.startKoin
+import org.koin.dsl.module
 
+
+val sqlModule = module {
+    single<NormalizedCacheFactory> {
+        SqlNormalizedCacheFactory(androidContext(), "anilist_db")
+    }
+}
 class App : Application(), SingletonImageLoader.Factory {
 
     override fun onCreate() {
@@ -33,6 +42,7 @@ class App : Application(), SingletonImageLoader.Factory {
             androidContext(this@App)
             workManagerFactory()
             modules(
+                sqlModule,
                 dataStoreModule,
                 networkModule,
                 apiModule,

@@ -2,7 +2,7 @@ package com.axiel7.anihyou.core.network
 
 import com.apollographql.apollo.ApolloClient
 import com.apollographql.apollo.network.okHttpClient
-import com.apollographql.cache.normalized.api.CacheKey
+import com.apollographql.cache.normalized.api.NormalizedCacheFactory
 import com.apollographql.cache.normalized.memory.MemoryCacheFactory
 import com.axiel7.anihyou.core.base.ANILIST_GRAPHQL_URL
 import com.axiel7.anihyou.core.base.MAL_CLIENT_ID
@@ -16,15 +16,16 @@ import org.koin.dsl.module
 val networkModule = module {
     single { NetworkVariables() }
     single { provideAuthorizationInterceptor(get()) }
-    single { provideApolloClient(get()) }
+    single { provideApolloClient(get(), get()) }
     single { provideOkHttpClient() }
 }
 
 private fun provideApolloClient(
-    authorizationInterceptor: AuthorizationInterceptor
+    authorizationInterceptor: AuthorizationInterceptor,
+    sqlCacheFactory: NormalizedCacheFactory
 ): ApolloClient {
     val cacheFactory = MemoryCacheFactory(maxSizeBytes = 10 * 1024 * 1024)
-
+        .chain(sqlCacheFactory)
     val okHttpClient = OkHttpClient.Builder()
         .addInterceptor(authorizationInterceptor)
         .build()
@@ -32,10 +33,7 @@ private fun provideApolloClient(
     return ApolloClient.Builder()
         .serverUrl(ANILIST_GRAPHQL_URL)
         .okHttpClient(okHttpClient)
-        .cache(
-            cacheFactory,
-            keyScope = CacheKey.Scope.SERVICE
-        )
+        .cache(cacheFactory)
         .httpExposeErrorBody(true)
         .build()
 }
