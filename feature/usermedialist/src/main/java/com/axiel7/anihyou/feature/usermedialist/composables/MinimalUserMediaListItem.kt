@@ -37,6 +37,8 @@ import com.axiel7.anihyou.core.network.type.ScoreFormat
 import com.axiel7.anihyou.core.resources.R
 import com.axiel7.anihyou.core.ui.composables.IncrementOneButton
 import com.axiel7.anihyou.core.ui.composables.media.AiringScheduleText
+import com.axiel7.anihyou.core.ui.composables.media.AllPriorityColors
+import com.axiel7.anihyou.core.ui.composables.media.priorityIcon
 import com.axiel7.anihyou.core.ui.composables.scores.MinimalScoreIndicator
 import com.axiel7.anihyou.core.ui.theme.AniHyouTheme
 
@@ -46,8 +48,10 @@ fun MinimalUserMediaListItem(
     item: CommonMediaListEntry,
     listStatus: MediaListStatus?,
     scoreFormat: ScoreFormat,
+    allPriorityColors: AllPriorityColors,
     isMyList: Boolean,
     isPlusEnabled: Boolean,
+    showLowPriority: Boolean,
     onClick: () -> Unit,
     onLongClick: () -> Unit,
     onClickPlus: (Int) -> Unit,
@@ -55,6 +59,7 @@ fun MinimalUserMediaListItem(
     onClickNotes: () -> Unit,
 ) {
     val status = listStatus ?: item.basicMediaListEntry.status
+    val priority = item.basicMediaListEntry.priority
     ListItem(
         onClick = onClick,
         onLongClick = onLongClick,
@@ -86,7 +91,6 @@ fun MinimalUserMediaListItem(
 
             AiringScheduleText(
                 item = item,
-                fontSize = 15.sp
             )
 
             Row(
@@ -120,6 +124,14 @@ fun MinimalUserMediaListItem(
                         modifier = Modifier.size(20.dp),
                     )
                 }
+                if (priority != null && (priority > 0 || showLowPriority)) {
+                    Icon(
+                        painter = painterResource(priority.priorityIcon()),
+                        contentDescription = stringResource(R.string.priority),
+                        modifier = Modifier.size(20.dp),
+                        tint = allPriorityColors.forPriority(priority).background,
+                    )
+                }
                 Spacer(modifier = Modifier.weight(1f))
                 if (item.basicMediaListEntry.repeat.isGreaterThanZero()) {
                     RepeatIndicator(count = item.basicMediaListEntry.repeat ?: 0)
@@ -142,8 +154,10 @@ private fun MinimalUserMediaListItemPreview() {
                     item = exampleCommonMediaListEntry,
                     listStatus = MediaListStatus.CURRENT,
                     scoreFormat = ScoreFormat.POINT_100,
+                    allPriorityColors = AllPriorityColors.Default,
                     isMyList = true,
                     isPlusEnabled = true,
+                    showLowPriority = true,
                     onClick = {},
                     onLongClick = {},
                     onClickPlus = {},
@@ -159,8 +173,10 @@ private fun MinimalUserMediaListItemPreview() {
                     ),
                     listStatus = null,
                     scoreFormat = ScoreFormat.POINT_3,
+                    allPriorityColors = AllPriorityColors.Default,
                     isMyList = true,
                     isPlusEnabled = true,
+                    showLowPriority = false,
                     onClick = {},
                     onLongClick = {},
                     onClickPlus = {},

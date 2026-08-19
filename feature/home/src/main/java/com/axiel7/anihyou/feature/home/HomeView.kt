@@ -1,13 +1,13 @@
 package com.axiel7.anihyou.feature.home
 
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.systemBars
 import androidx.compose.material3.Badge
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.PrimaryTabRow
@@ -29,24 +29,23 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.axiel7.anihyou.core.common.utils.NumberUtils.format
 import com.axiel7.anihyou.core.model.HomeTab
 import com.axiel7.anihyou.core.resources.R
-import com.axiel7.anihyou.core.ui.common.navigation.NavActionManager
+import com.axiel7.anihyou.core.ui.common.LocalNavActionManager
 import com.axiel7.anihyou.core.ui.common.rememberSnackbarManager
 import com.axiel7.anihyou.core.ui.composables.DefaultScaffoldWithSmallTopAppBar
 import com.axiel7.anihyou.core.ui.composables.IconButtonWithBadge
-import com.axiel7.anihyou.core.ui.composables.markdown.MarkdownUriHandler
 import com.axiel7.anihyou.feature.home.activity.ActivityFeedView
 import com.axiel7.anihyou.feature.home.current.CurrentView
 import com.axiel7.anihyou.feature.login.LoginView
 import org.koin.compose.viewmodel.koinActivityViewModel
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeView(
     isLoggedIn: Boolean,
     defaultHomeTab: HomeTab,
     modifier: Modifier = Modifier,
-    uriHandler: MarkdownUriHandler,
-    navActionManager: NavActionManager,
 ) {
+    val navActionManager = LocalNavActionManager.current
     val viewModel: HomeViewModel = koinActivityViewModel()
 
     val topAppBarScrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior(
@@ -116,8 +115,6 @@ fun HomeView(
                     if (isLoggedIn) {
                         ActivityFeedView(
                             modifier = Modifier.nestedScroll(topAppBarScrollBehavior.nestedScrollConnection),
-                            uriHandler = uriHandler,
-                            navActionManager = navActionManager,
                         )
                     } else {
                         LoginView()
@@ -128,7 +125,6 @@ fun HomeView(
                     if (isLoggedIn) {
                         CurrentView(
                             isLoggedIn = true,
-                            navActionManager = navActionManager,
                             modifier = Modifier.nestedScroll(topAppBarScrollBehavior.nestedScrollConnection),
                         )
                     } else {

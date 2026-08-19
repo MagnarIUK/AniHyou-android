@@ -161,6 +161,18 @@ class SettingsViewModel(
         }
     }
 
+    override fun setShowLowPriority(value: Boolean) {
+        viewModelScope.launch {
+            defaultPreferencesRepository.setShowLowPriority(value)
+        }
+    }
+
+    override fun setHideScores(value: Boolean) {
+        viewModelScope.launch {
+            defaultPreferencesRepository.setHideScores(value)
+        }
+    }
+
     override fun setTranslatorApp(value: TranslatorApp) {
         viewModelScope.launch {
             defaultPreferencesRepository.setTranslatorApp(value)
@@ -182,7 +194,14 @@ class SettingsViewModel(
     override fun setScoreFormat(value: ScoreFormat) {
         viewModelScope.launch {
             defaultPreferencesRepository.setScoreFormat(value)
+            defaultPreferencesRepository.setScoreSteps(1.0) // reset to 1 when selecting new score format
             updateUser(scoreFormat = value)
+        }
+    }
+
+    override fun setScoreStep(value: Double) {
+        viewModelScope.launch {
+            defaultPreferencesRepository.setScoreSteps(value)
         }
     }
 
@@ -288,9 +307,14 @@ class SettingsViewModel(
             .launchIn(viewModelScope)
 
         defaultPreferencesRepository.blurAdult
-            .filterNotNull()
             .onEach { value ->
                 mutableUiState.update { it.copy(blurAdultContent = value) }
+            }
+            .launchIn(viewModelScope)
+
+        defaultPreferencesRepository.showLowPriority
+            .onEach { value ->
+                mutableUiState.update { it.copy(showLowPriority = value) }
             }
             .launchIn(viewModelScope)
 
@@ -331,6 +355,12 @@ class SettingsViewModel(
             }
             .launchIn(viewModelScope)
 
+        defaultPreferencesRepository.scoreSteps
+            .onEach { value ->
+                mutableUiState.update { it.copy(scoreStep = value) }
+            }
+            .launchIn(viewModelScope)
+
         defaultPreferencesRepository.isNotificationsEnabled
             .onEach { value ->
                 mutableUiState.update { it.copy(isNotificationsEnabled = value) }
@@ -346,6 +376,12 @@ class SettingsViewModel(
         defaultPreferencesRepository.translatorApp
             .onEach { value ->
                 mutableUiState.update { it.copy(translatorApp = value) }
+            }
+            .launchIn(viewModelScope)
+
+        defaultPreferencesRepository.hideScores
+            .onEach { value ->
+                mutableUiState.update { it.copy(hideScores = value) }
             }
             .launchIn(viewModelScope)
     }

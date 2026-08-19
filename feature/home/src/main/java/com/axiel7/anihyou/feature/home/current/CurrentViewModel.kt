@@ -20,6 +20,7 @@ import com.axiel7.anihyou.core.network.type.MediaListSort
 import com.axiel7.anihyou.core.network.type.MediaListStatus
 import com.axiel7.anihyou.core.network.type.MediaStatus
 import com.axiel7.anihyou.core.network.type.MediaType
+import com.axiel7.anihyou.core.network.type.ScoreFormat
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
@@ -138,14 +139,18 @@ class CurrentViewModel(
         }
     }
 
-    init {
-        defaultPreferencesRepository.scoreFormat
-            .filterNotNull()
-            .onEach { value ->
-                mutableUiState.update { it.copy(scoreFormat = value) }
-            }
-            .launchIn(viewModelScope)
+    private fun findEntryAndListType(entry: BasicMediaListEntry): Pair<CommonMediaListEntry, CurrentListType>? {
+        val predicate: (CommonMediaListEntry) -> Boolean = { it.mediaId == entry.mediaId }
+        mutableUiState.value.run {
+            return airingList.find(predicate)?.let { it to CurrentListType.AIRING }
+                ?: behindList.find(predicate)?.let { it to CurrentListType.BEHIND }
+                ?: animeList.find(predicate)?.let { it to CurrentListType.ANIME }
+                ?: mangaList.find(predicate)?.let { it to CurrentListType.MANGA }
+                ?: nextSeasonAnimeList.find(predicate)?.let { it to CurrentListType.NEXT_SEASON }
+        }
+    }
 
+    init {
         // anime
         mutableUiState
             .distinctUntilChanged { _, new ->
@@ -157,6 +162,7 @@ class CurrentViewModel(
                     mediaType = MediaType.ANIME,
                     statusIn = listOf(MediaListStatus.CURRENT, MediaListStatus.REPEATING),
                     sort = listOf(MediaListSort.UPDATED_TIME_DESC),
+                    scoreFormat = defaultPreferencesRepository.scoreFormat.first() ?: ScoreFormat.POINT_10_DECIMAL,
                     fetchFromNetwork = uiState.fetchFromNetwork,
                     page = null,
                     perPage = null,
@@ -217,6 +223,7 @@ class CurrentViewModel(
                     mediaType = MediaType.MANGA,
                     statusIn = listOf(MediaListStatus.CURRENT, MediaListStatus.REPEATING),
                     sort = listOf(MediaListSort.UPDATED_TIME_DESC),
+                    scoreFormat = defaultPreferencesRepository.scoreFormat.first() ?: ScoreFormat.POINT_10_DECIMAL,
                     fetchFromNetwork = uiState.fetchFromNetwork,
                     page = 1
                 )
@@ -303,6 +310,19 @@ class CurrentViewModel(
                             )
                         }
                     }
+                }
+            }
+            .launchIn(viewModelScope)
+
+        mediaListRepository
+            .lastUpdatedEntry
+            .filterNotNull()
+            .onEach { entry ->
+                findEntryAndListType(entry)?.let {
+                    val mediaEntry = it.first
+                    val listType = it.second
+                    selectItem(mediaEntry, listType)
+                    onUpdateListEntry(entry, listType)
                 }
             }
             .launchIn(viewModelScope)

@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Surface
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberTopAppBarState
@@ -22,7 +23,6 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.axiel7.anihyou.core.base.ANILIST_ACCOUNT_SETTINGS_URL
 import com.axiel7.anihyou.core.base.DISCORD_SERVER_URL
-import com.axiel7.anihyou.core.base.GITHUB_PROFILE_URL
 import com.axiel7.anihyou.core.base.GITHUB_REPO_URL
 import com.axiel7.anihyou.core.common.utils.ContextUtils.copyToClipBoard
 import com.axiel7.anihyou.core.common.utils.ContextUtils.getActivity
@@ -42,18 +42,19 @@ import com.axiel7.anihyou.core.network.type.ScoreFormat
 import com.axiel7.anihyou.core.network.type.UserStaffNameLanguage
 import com.axiel7.anihyou.core.network.type.UserTitleLanguage
 import com.axiel7.anihyou.core.resources.R
-import com.axiel7.anihyou.core.ui.common.navigation.NavActionManager
+import com.axiel7.anihyou.core.ui.common.LocalIsLanguageEn
+import com.axiel7.anihyou.core.ui.common.LocalNavActionManager
 import com.axiel7.anihyou.core.ui.common.rememberSnackbarManager
 import com.axiel7.anihyou.core.ui.composables.DefaultScaffoldWithSmallTopAppBar
 import com.axiel7.anihyou.core.ui.composables.ListPreference
 import com.axiel7.anihyou.core.ui.composables.PlainPreference
 import com.axiel7.anihyou.core.ui.composables.PreferencesTitle
+import com.axiel7.anihyou.core.ui.composables.ScoreStepsPreferenceSheet
 import com.axiel7.anihyou.core.ui.composables.SwitchPreference
 import com.axiel7.anihyou.core.ui.composables.common.BackIconButton
 import com.axiel7.anihyou.core.ui.composables.common.ErrorDialogHandler
 import com.axiel7.anihyou.core.ui.composables.common.SmallCircularProgressIndicator
 import com.axiel7.anihyou.core.ui.theme.AniHyouTheme
-import com.axiel7.anihyou.core.ui.utils.LocaleUtils.LocalIsLanguageEn
 import com.axiel7.anihyou.feature.settings.composables.CustomColorPreference
 import com.axiel7.anihyou.feature.settings.composables.LanguagePreference
 import com.axiel7.anihyou.feature.worker.NotificationWorker.Companion.createDefaultNotificationChannels
@@ -67,9 +68,7 @@ private const val versionString = "${BuildConfig.VERSION_NAME} (${BuildConfig.VE
 
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable
-fun SettingsView(
-    navActionManager: NavActionManager
-) {
+fun SettingsView() {
     val viewModel: SettingsViewModel = koinViewModel()
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val notificationPermission = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
@@ -80,18 +79,17 @@ fun SettingsView(
         uiState = uiState,
         event = viewModel,
         notificationPermission = notificationPermission,
-        navActionManager = navActionManager,
     )
 }
 
-@OptIn(ExperimentalPermissionsApi::class)
+@OptIn(ExperimentalPermissionsApi::class, ExperimentalMaterial3Api::class)
 @Composable
 private fun SettingsContent(
     uiState: SettingsUiState,
     event: SettingsEvent?,
     notificationPermission: PermissionState?,
-    navActionManager: NavActionManager,
 ) {
+    val navActionManager = LocalNavActionManager.current
     val isEnglishLocale = LocalIsLanguageEn.current
     val context = LocalContext.current
     val snackbarManager = rememberSnackbarManager()
@@ -208,6 +206,7 @@ private fun SettingsContent(
                     }
                 )
 
+
                 ListPreference(
                     title = stringResource(R.string.score_format),
                     entriesValues = ScoreFormat.entriesLocalized,
@@ -215,6 +214,18 @@ private fun SettingsContent(
                     icon = R.drawable.star_24,
                     onValueChange = { event?.setScoreFormat(it) }
                 )
+                if (uiState.scoreFormat == ScoreFormat.POINT_10_DECIMAL ||
+                    uiState.scoreFormat == ScoreFormat.POINT_10 ||
+                    uiState.scoreFormat == ScoreFormat.POINT_100
+                ) {
+                    ScoreStepsPreferenceSheet(
+                        title = stringResource(R.string.score_steps),
+                        changeValue = { event?.setScoreStep(it) },
+                        scoreFormat = uiState.scoreFormat,
+                        initialValue = uiState.scoreStep
+                    )
+                }
+
 
                 ListPreference(
                     title = stringResource(R.string.default_tab),
@@ -258,10 +269,24 @@ private fun SettingsContent(
                         onValueChange = { event?.setGridItemsPerRow(it) }
                     )
                 }
+
                 PlainPreference(
                     title = stringResource(R.string.custom_lists),
                     icon = R.drawable.playlist_add_24,
                     onClick = navActionManager::toCustomLists
+                )
+
+                SwitchPreference(
+                    title = stringResource(R.string.show_low_priority),
+                    preferenceValue = uiState.showLowPriority,
+                    icon = R.drawable.counter_0_24,
+                    onValueChange = { event?.setShowLowPriority(it) }
+                )
+
+                PlainPreference(
+                    title = stringResource(R.string.priority_color_change),
+                    icon = R.drawable.colors_24,
+                    onClick = navActionManager::toPriorityColors
                 )
 
                 PreferencesTitle(text = stringResource(R.string.content))
@@ -277,6 +302,13 @@ private fun SettingsContent(
                     preferenceValue = uiState.blurAdultContent,
                     icon = R.drawable.blur_on_24,
                     onValueChange = { event?.setBlurAdultContent(it) }
+                )
+
+                SwitchPreference(
+                    title = stringResource(R.string.hide_scores),
+                    preferenceValue = uiState.hideScores,
+                    icon = R.drawable.star_half_24,
+                    onValueChange = { event?.setHideScores(it) }
                 )
 
                 SwitchPreference(
@@ -365,11 +397,9 @@ private fun SettingsContent(
             )
 
             PlainPreference(
-                title = stringResource(R.string.developed_by_axiel7),
+                title = stringResource(R.string.contributors),
                 icon = R.drawable.code_24,
-                onClick = {
-                    context.openActionView(GITHUB_PROFILE_URL)
-                }
+                onClick = navActionManager::toContributors
             )
 
             PlainPreference(
@@ -401,7 +431,6 @@ private fun SettingsViewPreview() {
                 uiState = SettingsUiState(isLoggedIn = true),
                 event = null,
                 notificationPermission = null,
-                navActionManager = NavActionManager.rememberNavActionManager()
             )
         }
     }

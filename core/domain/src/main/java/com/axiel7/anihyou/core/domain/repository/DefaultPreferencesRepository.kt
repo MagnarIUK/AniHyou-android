@@ -6,6 +6,7 @@ import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.MutablePreferences
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
+import androidx.datastore.preferences.core.doublePreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
@@ -89,6 +90,36 @@ class DefaultPreferencesRepository (
         dataStore.setValue(BLUR_ADULT_KEY, value)
     }
 
+    val showLowPriority = dataStore.getValue(SHOW_LOW_PRIORITY_KEY, default = false)
+    suspend fun setShowLowPriority(value: Boolean) {
+        dataStore.setValue(SHOW_LOW_PRIORITY_KEY, value)
+    }
+
+    // temporary hardcoded colors
+    val colorLowPriority = dataStore.getValue(COLOR_LOW_PRIORITY_KEY).map {
+        it ?: 0xFF7CB342.toInt() // green
+    }
+
+    suspend fun setColorLowPriority(color: Color) {
+        dataStore.setValue(COLOR_LOW_PRIORITY_KEY, color.toArgb())
+    }
+
+    val colorMediumPriority = dataStore.getValue(COLOR_MEDIUM_PRIORITY_KEY).map {
+        it ?: 0xFFF4D03F.toInt() // yellow
+    }
+
+    suspend fun setColorMediumPriority(color: Color) {
+        dataStore.setValue(COLOR_MEDIUM_PRIORITY_KEY, color.toArgb())
+    }
+
+    val colorHighPriority = dataStore.getValue(COLOR_HIGH_PRIORITY_KEY).map {
+        it ?: 0xFFD84315.toInt() // red
+    }
+
+    suspend fun setColorHighPriority(color: Color) {
+        dataStore.setValue(COLOR_HIGH_PRIORITY_KEY, color.toArgb())
+    }
+
     // profile info
     val profileColor = dataStore.getValue(PROFILE_COLOR_KEY).map {
         if (it != null) colorFromHex(it) else null
@@ -104,6 +135,12 @@ class DefaultPreferencesRepository (
 
     suspend fun setScoreFormat(value: ScoreFormat) {
         dataStore.setValue(SCORE_FORMAT_KEY, value.name)
+    }
+
+    val scoreSteps = dataStore.getValue(SCORE_STEPS_KEY, default = 1.0)
+
+    suspend fun setScoreSteps(value: Double) {
+        dataStore.setValue(SCORE_STEPS_KEY, value)
     }
 
     val advancedScoringEnabled = dataStore.getValue(ADVANCED_SCORING_KEY, false)
@@ -301,6 +338,13 @@ class DefaultPreferencesRepository (
         dataStore.setValue(TRANSLATOR_APP_KEY, value.name)
     }
 
+    val hideScores = dataStore.getValue(HIDE_SCORES_KEY, default = false)
+
+    suspend fun setHideScores(value: Boolean) {
+        dataStore.setValue(HIDE_SCORES_KEY, value)
+    }
+
+
     companion object {
         private val ACCESS_TOKEN_KEY = stringPreferencesKey("access_token")
         private val USER_ID_KEY = intPreferencesKey("user_id")
@@ -308,8 +352,13 @@ class DefaultPreferencesRepository (
         private val TITLE_LANGUAGE_KEY = stringPreferencesKey("title_language")
         private val DISPLAY_ADULT_KEY = booleanPreferencesKey("display_adult")
         private val BLUR_ADULT_KEY = booleanPreferencesKey("blur_adult")
+        private val SHOW_LOW_PRIORITY_KEY = booleanPreferencesKey("show_low_priority")
+        private val COLOR_LOW_PRIORITY_KEY = intPreferencesKey("color_low_priority")
+        private val COLOR_MEDIUM_PRIORITY_KEY = intPreferencesKey("color_medium_priority")
+        private val COLOR_HIGH_PRIORITY_KEY = intPreferencesKey("color_high_priority")
         private val PROFILE_COLOR_KEY = stringPreferencesKey("profile_color")
         private val SCORE_FORMAT_KEY = stringPreferencesKey("score_format")
+        private val SCORE_STEPS_KEY = doublePreferencesKey("score_steps")
         private val ADVANCED_SCORING_KEY = booleanPreferencesKey("advanced_scoring")
         private val ANIME_SECTION_ORDER_KEY = stringPreferencesKey("anime_section_order")
         private val MANGA_SECTION_ORDER_KEY = stringPreferencesKey("manga_section_order")
@@ -336,5 +385,6 @@ class DefaultPreferencesRepository (
         private val COLOR_PALETTE_KEY = stringPreferencesKey("color_palette")
 
         private val TRANSLATOR_APP_KEY = stringPreferencesKey("translator_app")
+        private val HIDE_SCORES_KEY = booleanPreferencesKey("hide_scores")
     }
 }

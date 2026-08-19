@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -23,7 +24,7 @@ import com.axiel7.anihyou.core.model.media.localized
 import com.axiel7.anihyou.core.network.type.MediaListStatus
 import com.axiel7.anihyou.core.network.type.MediaType
 import com.axiel7.anihyou.core.resources.R
-import com.axiel7.anihyou.core.ui.common.navigation.NavActionManager
+import com.axiel7.anihyou.core.ui.common.LocalNavActionManager
 import com.axiel7.anihyou.core.ui.composables.DefaultScaffoldWithSmallTopAppBar
 import com.axiel7.anihyou.core.ui.composables.ListPreference
 import com.axiel7.anihyou.core.ui.composables.PreferencesTitle
@@ -32,25 +33,23 @@ import com.axiel7.anihyou.core.ui.theme.AniHyouTheme
 import org.koin.compose.viewmodel.koinViewModel
 
 @Composable
-fun ListStyleSettingsView(
-    navActionManager: NavActionManager,
-) {
+fun ListStyleSettingsView() {
     val viewModel: ListStyleSettingsViewModel = koinViewModel()
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
     ListStyleSettingsContent(
         uiState = uiState,
         event = viewModel,
-        navActionManager = navActionManager,
     )
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun ListStyleSettingsContent(
     uiState: ListStyleSettingsUiState,
     event: ListStyleSettingsEvent?,
-    navActionManager: NavActionManager,
 ) {
+    val navActionManager = LocalNavActionManager.current
     val topAppBarScrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior(
         rememberTopAppBarState()
     )
@@ -129,7 +128,6 @@ private fun ListStyleSettingsViewPreview() {
             ListStyleSettingsContent(
                 uiState = ListStyleSettingsUiState(),
                 event = null,
-                navActionManager = NavActionManager.rememberNavActionManager()
             )
         }
     }

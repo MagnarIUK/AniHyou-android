@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -29,7 +30,8 @@ import com.axiel7.anihyou.core.model.media.duration
 import com.axiel7.anihyou.core.model.media.exampleCommonMediaListEntry
 import com.axiel7.anihyou.core.model.media.progressOrVolumes
 import com.axiel7.anihyou.core.network.fragment.CommonMediaListEntry
-import com.axiel7.anihyou.core.network.type.ScoreFormat
+import com.axiel7.anihyou.core.ui.common.LocalBlurAdult
+import com.axiel7.anihyou.core.ui.common.LocalScoreFormat
 import com.axiel7.anihyou.core.ui.composables.IncrementOneButton
 import com.axiel7.anihyou.core.ui.composables.defaultPlaceholder
 import com.axiel7.anihyou.core.ui.composables.media.AiringScheduleText
@@ -38,20 +40,19 @@ import com.axiel7.anihyou.core.ui.composables.media.MEDIA_POSTER_COMPACT_WIDTH
 import com.axiel7.anihyou.core.ui.composables.media.MediaPoster
 import com.axiel7.anihyou.core.ui.composables.scores.BadgeScoreIndicator
 import com.axiel7.anihyou.core.ui.theme.AniHyouTheme
-import com.axiel7.anihyou.core.ui.utils.ImageUtils.LocalBlurAdult
 
 @OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun CurrentListItem(
     modifier: Modifier = Modifier,
     item: CommonMediaListEntry,
-    scoreFormat: ScoreFormat,
     isPlusEnabled: Boolean,
     onClick: () -> Unit,
     onLongClick: () -> Unit,
     onClickPlus: (Int) -> Unit,
     blockPlus: () -> Unit,
 ) {
+    val scoreFormat = LocalScoreFormat.current
     val blurAdult = LocalBlurAdult.current
     ListItem(
         onClick = onClick,
@@ -90,14 +91,15 @@ fun CurrentListItem(
             Text(
                 text = item.media?.basicMediaDetails?.title?.userPreferred.orEmpty(),
                 color = MaterialTheme.colorScheme.onSurface,
-                lineHeight = 19.sp,
+                style = MaterialTheme.typography.bodyLarge,
                 overflow = TextOverflow.Ellipsis,
                 maxLines = 2
             )
 
+            Spacer(modifier = Modifier.weight(1f))
+
             AiringScheduleText(
                 item = item,
-                fontSize = 15.sp,
             )
 
             Row(
@@ -177,7 +179,6 @@ private fun CurrentListItemPreview() {
             Column {
                 CurrentListItem(
                     item = exampleCommonMediaListEntry,
-                    scoreFormat = ScoreFormat.POINT_10_DECIMAL,
                     isPlusEnabled = true,
                     onClick = {},
                     onLongClick = {},

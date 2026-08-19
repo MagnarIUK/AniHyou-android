@@ -28,16 +28,15 @@ import com.axiel7.anihyou.core.common.utils.DateUtils.timestampIntervalSinceNow
 import com.axiel7.anihyou.core.common.utils.StringUtils.htmlStripped
 import com.axiel7.anihyou.core.model.TranslatorApp
 import com.axiel7.anihyou.core.model.thread.ChildComment
+import com.axiel7.anihyou.core.ui.common.LocalIsLanguageEn
 import com.axiel7.anihyou.core.ui.composables.common.CommentIconButton
 import com.axiel7.anihyou.core.ui.composables.common.FavoriteIconButton
 import com.axiel7.anihyou.core.ui.composables.common.ReplyButton
 import com.axiel7.anihyou.core.ui.composables.common.TranslateIconButton
 import com.axiel7.anihyou.core.ui.composables.markdown.DefaultMarkdownText
-import com.axiel7.anihyou.core.ui.composables.markdown.MarkdownUriHandler
 import com.axiel7.anihyou.core.ui.composables.person.PersonItemSmall
 import com.axiel7.anihyou.core.ui.theme.AniHyouTheme
 import com.axiel7.anihyou.core.ui.utils.ComposeDateUtils.secondsToLegibleText
-import com.axiel7.anihyou.core.ui.utils.LocaleUtils.LocalIsLanguageEn
 import kotlinx.coroutines.launch
 import java.time.temporal.ChronoUnit
 
@@ -48,13 +47,14 @@ fun ChildCommentView(
     modifier: Modifier = Modifier,
     toggleLike: suspend (Int) -> Boolean,
     navigateToUserDetails: () -> Unit,
+    navigateToDetails: (ChildComment) -> Unit,
     navigateToPublishReply: (parentCommentId: Int, Int?, String?) -> Unit,
-    uriHandler: MarkdownUriHandler,
 ) {
     val isEnglishLocale = LocalIsLanguageEn.current
     val scope = rememberCoroutineScope()
     var isLiked by remember { mutableStateOf(comment.isLiked == true) }
-    var showChildComments by remember { mutableStateOf(false) }
+    val hasComments = !comment.childComments.isNullOrEmpty()
+
     Row(
         modifier = modifier
             .padding(horizontal = 16.dp)
@@ -86,16 +86,14 @@ fun ChildCommentView(
                             maxUnit = ChronoUnit.WEEKS,
                             isFutureDate = false
                         ),
-                    color = MaterialTheme.colorScheme.outline,
-                    fontSize = 14.sp
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    style = MaterialTheme.typography.labelMedium,
                 )
             }
             DefaultMarkdownText(
                 markdown = comment.comment.orEmpty(),
                 modifier = Modifier.padding(vertical = 8.dp),
-                fontSize = 15.sp,
-                lineHeight = 15.sp,
-                uriHandler = uriHandler,
+                textStyle = MaterialTheme.typography.bodyMedium,
             )
             Row(
                 modifier = Modifier.align(Alignment.End),
@@ -107,11 +105,11 @@ fun ChildCommentView(
                         app = translatorApp,
                     )
                 }
-                if (!comment.childComments.isNullOrEmpty()) {
+                if (hasComments) {
                     CommentIconButton(
                         modifier = Modifier.width(78.dp),
-                        commentCount = comment.childComments!!.size,
-                        onClick = { showChildComments = !showChildComments },
+                        commentCount = comment.childComments?.size ?: 0,
+                        onClick = { navigateToDetails(comment) },
                         fontSize = 14.sp,
                         iconSize = 20.dp,
                     )
@@ -133,19 +131,6 @@ fun ChildCommentView(
                     )
                 }
             }
-        }//:Column
-    }//:Row
-    if (showChildComments) {
-        comment.childComments?.filterNotNull()?.forEach {
-            ChildCommentView(
-                comment = it,
-                translatorApp = translatorApp,
-                modifier = Modifier.padding(start = 16.dp),
-                toggleLike = toggleLike,
-                navigateToUserDetails = navigateToUserDetails,
-                navigateToPublishReply = navigateToPublishReply,
-                uriHandler = uriHandler,
-            )
         }
     }
 }
@@ -160,8 +145,8 @@ private fun ChildCommentViewPreview() {
                 translatorApp = TranslatorApp.DEFAULT,
                 toggleLike = { true },
                 navigateToUserDetails = {},
+                navigateToDetails = {},
                 navigateToPublishReply = { _, _, _ -> },
-                uriHandler = MarkdownUriHandler(),
             )
         }
     }

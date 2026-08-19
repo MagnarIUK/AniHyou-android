@@ -29,6 +29,7 @@ import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.rememberDecoratedNavEntries
 import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
+import androidx.navigation3.runtime.result.rememberResultEventBusNavEntryDecorator
 import androidx.navigation3.runtime.serialization.NavKeySerializer
 import androidx.savedstate.compose.serialization.serializers.MutableStateSerializer
 
@@ -40,8 +41,8 @@ import androidx.savedstate.compose.serialization.serializers.MutableStateSeriali
  */
 @Composable
 fun rememberNavigationState(
-    startRoute: NavKey,
-    topLevelRoutes: Set<NavKey>
+    startRoute: Route,
+    topLevelRoutes: Set<Route>
 ): NavigationState {
 
     val topLevelRoute = rememberSerializable(
@@ -72,15 +73,15 @@ fun rememberNavigationState(
  * @param backStacks - the back stacks for each top level route.
  */
 class NavigationState(
-    val startRoute: NavKey,
-    topLevelRoute: MutableState<NavKey>,
-    val backStacks: Map<NavKey, NavBackStack<NavKey>>
+    val startRoute: Route,
+    topLevelRoute: MutableState<Route>,
+    val backStacks: Map<Route, NavBackStack<NavKey>>
 ) {
 
     /**
      * The top level route.
      */
-    var topLevelRoute: NavKey by topLevelRoute
+    var topLevelRoute: Route by topLevelRoute
 
     /**
      * Convert the navigation state into `NavEntry`s that have been decorated with a
@@ -100,7 +101,8 @@ class NavigationState(
         val decoratedEntries = backStacks.mapValues { (_, stack) ->
             val decorators = listOf(
                 rememberSaveableStateHolderNavEntryDecorator<NavKey>(),
-                rememberViewModelStoreNavEntryDecorator()
+                rememberViewModelStoreNavEntryDecorator(),
+                rememberResultEventBusNavEntryDecorator()
             )
             rememberDecoratedNavEntries(
                 backStack = stack,

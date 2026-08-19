@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
@@ -35,14 +36,16 @@ import com.axiel7.anihyou.core.network.fragment.CommonMediaListEntry
 import com.axiel7.anihyou.core.network.type.MediaListStatus
 import com.axiel7.anihyou.core.network.type.ScoreFormat
 import com.axiel7.anihyou.core.resources.R
+import com.axiel7.anihyou.core.ui.common.LocalBlurAdult
 import com.axiel7.anihyou.core.ui.composables.IncrementOneButton
 import com.axiel7.anihyou.core.ui.composables.media.AiringScheduleText
+import com.axiel7.anihyou.core.ui.composables.media.AllPriorityColors
 import com.axiel7.anihyou.core.ui.composables.media.ListStatusBadgeIndicator
 import com.axiel7.anihyou.core.ui.composables.media.MEDIA_POSTER_COMPACT_WIDTH
 import com.axiel7.anihyou.core.ui.composables.media.MediaPoster
+import com.axiel7.anihyou.core.ui.composables.media.PriorityIndicator
 import com.axiel7.anihyou.core.ui.composables.scores.BadgeScoreIndicator
 import com.axiel7.anihyou.core.ui.theme.AniHyouTheme
-import com.axiel7.anihyou.core.ui.utils.ImageUtils.LocalBlurAdult
 
 @OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
@@ -52,6 +55,8 @@ fun CompactUserMediaListItem(
     scoreFormat: ScoreFormat,
     isMyList: Boolean,
     isPlusEnabled: Boolean,
+    showLowPriority: Boolean,
+    allPriorityColors: AllPriorityColors,
     onClick: () -> Unit,
     onLongClick: () -> Unit,
     onClickPlus: (Int) -> Unit,
@@ -60,6 +65,7 @@ fun CompactUserMediaListItem(
 ) {
     val blurAdult = LocalBlurAdult.current
     val status = listStatus ?: item.basicMediaListEntry.status
+    val priority = item.basicMediaListEntry.priority
     ListItem(
         onClick = onClick,
         onLongClick = onLongClick,
@@ -92,11 +98,19 @@ fun CompactUserMediaListItem(
                         scoreFormat = scoreFormat
                     )
                 }
+
+                if (priority != null && (priority > 0 || showLowPriority)) {
+                    PriorityIndicator(
+                        modifier = Modifier.align(Alignment.TopEnd),
+                        priority = priority,
+                        allPriorityColors = allPriorityColors,
+                    )
+                }
             }//: Box
         }
     ) {
         Column(
-            modifier = Modifier,
+            modifier = Modifier.height((MEDIA_POSTER_COMPACT_WIDTH + 8).dp),
             verticalArrangement = Arrangement.SpaceBetween
         ) {
             Text(
@@ -110,7 +124,6 @@ fun CompactUserMediaListItem(
 
             AiringScheduleText(
                 item = item,
-                fontSize = 16.sp,
             )
 
             Row(
@@ -177,6 +190,8 @@ private fun CompactUserMediaListItemPreview() {
                     scoreFormat = ScoreFormat.POINT_100,
                     isMyList = true,
                     isPlusEnabled = true,
+                    showLowPriority = true,
+                    allPriorityColors = AllPriorityColors.Default,
                     onClick = {},
                     onLongClick = {},
                     onClickPlus = {},
@@ -194,6 +209,8 @@ private fun CompactUserMediaListItemPreview() {
                     scoreFormat = ScoreFormat.POINT_3,
                     isMyList = true,
                     isPlusEnabled = true,
+                    showLowPriority = false,
+                    allPriorityColors = AllPriorityColors.Default,
                     onClick = {},
                     onLongClick = {},
                     onClickPlus = {},

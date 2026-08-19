@@ -1,7 +1,5 @@
 package com.axiel7.anihyou.feature.usermedialist
 
-import androidx.activity.compose.LocalActivity
-import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -15,6 +13,7 @@ import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.layout.wrapContentSize
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.Icon
@@ -43,13 +42,12 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.LocalViewModelStoreOwner
 import com.axiel7.anihyou.core.model.media.icon
 import com.axiel7.anihyou.core.model.media.localized
 import com.axiel7.anihyou.core.network.type.MediaType
 import com.axiel7.anihyou.core.resources.R
-import com.axiel7.anihyou.core.ui.common.navigation.NavActionManager
-import com.axiel7.anihyou.core.ui.common.navigation.Routes
+import com.axiel7.anihyou.core.ui.common.LocalNavActionManager
+import com.axiel7.anihyou.core.ui.common.navigation.Route
 import com.axiel7.anihyou.core.ui.composables.DefaultScaffoldWithSmallTopAppBar
 import com.axiel7.anihyou.core.ui.composables.common.BackIconButton
 import com.axiel7.anihyou.core.ui.theme.AniHyouTheme
@@ -64,9 +62,9 @@ import org.koin.core.parameter.parametersOf
 
 @Composable
 fun UserMediaListHostView(
-    arguments: Routes.UserMediaList,
+    arguments: Route.UserMediaList,
+    isCompactScreen: Boolean,
     modifier: Modifier = Modifier,
-    navActionManager: NavActionManager,
 ) {
     val key = "${arguments.mediaType}${arguments.userId}"
     val viewModel: UserMediaListViewModel = if (arguments.userId == 0)
@@ -77,19 +75,20 @@ fun UserMediaListHostView(
     UserMediaListHostContent(
         uiState = uiState,
         event = viewModel,
+        isCompactScreen = isCompactScreen,
         modifier = modifier,
-        navActionManager = navActionManager,
     )
 }
 
-@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+@OptIn(ExperimentalMaterial3ExpressiveApi::class, ExperimentalMaterial3Api::class)
 @Composable
 private fun UserMediaListHostContent(
     uiState: UserMediaListUiState,
     event: UserMediaListEvent?,
+    isCompactScreen: Boolean,
     modifier: Modifier = Modifier,
-    navActionManager: NavActionManager,
 ) {
+    val navActionManager = LocalNavActionManager.current
     val scope = rememberCoroutineScope()
     val haptic = LocalHapticFeedback.current
 
@@ -117,7 +116,6 @@ private fun UserMediaListHostContent(
         SetScoreDialog(
             onDismiss = { event?.toggleScoreDialog(false) },
             onConfirm = { event?.setScore(it) },
-            scoreFormat = uiState.scoreFormat,
         )
     }
 
@@ -227,6 +225,7 @@ private fun UserMediaListHostContent(
             UserMediaListView(
                 uiState = uiState,
                 event = event,
+                isCompactScreen = isCompactScreen,
                 contentPadding = if (!uiState.isMyList)
                     PaddingValues(bottom = padding.calculateBottomPadding())
                 else PaddingValues(bottom = 8.dp),
@@ -252,7 +251,7 @@ private fun UserMediaListViewPreview() {
                     mediaType = MediaType.ANIME
                 ),
                 event = null,
-                navActionManager = NavActionManager.rememberNavActionManager()
+                isCompactScreen = true,
             )
         }
     }

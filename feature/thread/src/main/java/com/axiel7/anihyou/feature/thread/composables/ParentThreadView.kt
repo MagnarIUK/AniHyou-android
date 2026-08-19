@@ -20,16 +20,15 @@ import com.axiel7.anihyou.core.common.utils.StringUtils.htmlStripped
 import com.axiel7.anihyou.core.model.TranslatorApp
 import com.axiel7.anihyou.core.network.fragment.BasicThreadDetails
 import com.axiel7.anihyou.core.resources.R
+import com.axiel7.anihyou.core.ui.common.LocalIsLanguageEn
 import com.axiel7.anihyou.core.ui.composables.TextIconHorizontal
 import com.axiel7.anihyou.core.ui.composables.common.FavoriteIconButton
 import com.axiel7.anihyou.core.ui.composables.common.ReplyButton
 import com.axiel7.anihyou.core.ui.composables.common.TranslateIconButton
 import com.axiel7.anihyou.core.ui.composables.defaultPlaceholder
 import com.axiel7.anihyou.core.ui.composables.markdown.DefaultMarkdownText
-import com.axiel7.anihyou.core.ui.composables.markdown.MarkdownUriHandler
 import com.axiel7.anihyou.core.ui.composables.person.PersonItemSmall
 import com.axiel7.anihyou.core.ui.theme.AniHyouTheme
-import com.axiel7.anihyou.core.ui.utils.LocaleUtils.LocalIsLanguageEn
 
 @Composable
 fun ParentThreadView(
@@ -39,7 +38,6 @@ fun ParentThreadView(
     onClickLike: () -> Unit,
     onClickReply: () -> Unit,
     navigateToUserDetails: (Int) -> Unit,
-    uriHandler: MarkdownUriHandler,
 ) {
     val isEnglishLocale = LocalIsLanguageEn.current
     Column(
@@ -49,21 +47,17 @@ fun ParentThreadView(
     ) {
         Text(
             text = thread.title.orEmpty(),
-            fontSize = 22.sp,
-            fontWeight = FontWeight.SemiBold,
-            lineHeight = 24.sp
+            style = MaterialTheme.typography.titleLarge
         )
         Text(
             text = thread.createdAt.toLong().timestampToDateString(format = "MMM d, YYYY").orEmpty(),
             color = MaterialTheme.colorScheme.outline,
-            fontSize = 15.sp
+            style = MaterialTheme.typography.labelLarge
         )
 
         DefaultMarkdownText(
             markdown = thread.body,
             modifier = Modifier.padding(vertical = 8.dp),
-            fontSize = 17.sp,
-            uriHandler = uriHandler,
         )
 
         Row(
@@ -183,7 +177,6 @@ private fun ParentThreadViewPreview() {
                     onClickLike = {},
                     onClickReply = {},
                     navigateToUserDetails = {},
-                    uriHandler = MarkdownUriHandler()
                 )
                 ParentThreadViewPlaceholder()
             }

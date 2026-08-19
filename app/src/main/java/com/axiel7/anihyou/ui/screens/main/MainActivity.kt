@@ -13,12 +13,9 @@ import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
-import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.navigationBarsIgnoringVisibility
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.layout.systemBars
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -50,11 +47,14 @@ import com.axiel7.anihyou.core.resources.light_scrim
 import com.axiel7.anihyou.core.ui.common.BottomDestination
 import com.axiel7.anihyou.core.ui.common.BottomDestination.Companion.isBottomDestination
 import com.axiel7.anihyou.core.ui.common.BottomDestination.Companion.toBottomDestinationRoute
+import com.axiel7.anihyou.core.ui.common.LocalBlurAdult
+import com.axiel7.anihyou.core.ui.common.LocalHideScores
+import com.axiel7.anihyou.core.ui.common.LocalNavActionManager
+import com.axiel7.anihyou.core.ui.common.LocalScoreFormat
 import com.axiel7.anihyou.core.ui.common.navigation.NavActionManager
 import com.axiel7.anihyou.core.ui.common.navigation.Navigator
 import com.axiel7.anihyou.core.ui.common.navigation.rememberNavigationState
 import com.axiel7.anihyou.core.ui.theme.AniHyouTheme
-import com.axiel7.anihyou.core.ui.utils.ImageUtils.LocalBlurAdult
 import com.axiel7.anihyou.ui.screens.main.composables.MainBottomNavBar
 import com.axiel7.anihyou.ui.screens.main.composables.MainNavigationRail
 import kotlinx.coroutines.runBlocking
@@ -80,6 +80,8 @@ class MainActivity : AppCompatActivity() {
         val initialAppColorMode = viewModel.appColorMode.firstBlocking()
         val initialPaletteStyle = viewModel.paletteStyle.firstBlocking()
         val initialBlurAdult = viewModel.blurAdultContent.firstBlocking()
+        val initialScoreFormat = viewModel.scoreFormat.firstBlocking()
+        val initialHideScores = viewModel.hideScores.firstBlocking()
         val startTab = runBlocking { viewModel.getStartTab() }
         val homeTab = viewModel.homeTab.firstBlocking() ?: HomeTab.CURRENT
 
@@ -98,6 +100,8 @@ class MainActivity : AppCompatActivity() {
             val paletteStyle by viewModel.paletteStyle.collectAsStateWithLifecycle(initialPaletteStyle)
             val isLoggedIn by viewModel.isLoggedIn.collectAsStateWithLifecycle(initialIsLoggedIn)
             val blurAdultContent by viewModel.blurAdultContent.collectAsStateWithLifecycle(initialBlurAdult)
+            val scoreFormat by viewModel.scoreFormat.collectAsStateWithLifecycle(initialScoreFormat)
+            val hideScores by viewModel.hideScores.collectAsStateWithLifecycle(initialHideScores)
 
             DisposableEffect(isDark) {
                 enableEdgeToEdge(
@@ -124,7 +128,11 @@ class MainActivity : AppCompatActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    CompositionLocalProvider(LocalBlurAdult provides blurAdultContent) {
+                    CompositionLocalProvider(
+                        LocalBlurAdult provides blurAdultContent,
+                        LocalScoreFormat provides scoreFormat,
+                        LocalHideScores provides hideScores,
+                    ) {
                         MainView(
                             windowSizeClass = windowSizeClass,
                             isLoggedIn = isLoggedIn,
@@ -206,58 +214,56 @@ fun MainView(
     val isBottomDestination by remember {
         derivedStateOf { navigationState.getCurrentRoute()?.isBottomDestination() == true }
     }
-    val navActionManager = NavActionManager.rememberNavActionManager(navigator)
+    val navActionManager = remember { NavActionManager(navigator) }
     val isCompactScreen = windowSizeClass.widthSizeClass == WindowWidthSizeClass.Compact
 
     LaunchedEffect(isBottomDestination) {
         setNavigationBarContrastEnforced(!isBottomDestination)
     }
 
-    Scaffold(
-        bottomBar = {
+    CompositionLocalProvider(LocalNavActionManager provides navActionManager) {
+        Scaffold(
+            bottomBar = {
+                if (isCompactScreen) {
+                    MainBottomNavBar(
+                        currentTopRoute = navigator.state.topLevelRoute,
+                        isVisible = isBottomDestination,
+                        onItemSelected = { event?.saveLastTab(it) }
+                    )
+                }
+            },
+            contentWindowInsets = if (isCompactScreen) WindowInsets.systemBars
+                .only(WindowInsetsSides.Horizontal)
+            else WindowInsets(0, 0, 0, 0)
+        ) { padding ->
             if (isCompactScreen) {
-                MainBottomNavBar(
-                    navigator = navigator,
-                    navActionManager = navActionManager,
-                    isVisible = isBottomDestination,
-                    onItemSelected = { event?.saveLastTab(it) }
-                )
-            }
-        },
-        contentWindowInsets = WindowInsets.systemBars
-            .only(WindowInsetsSides.Horizontal)
-    ) { padding ->
-        if (isCompactScreen) {
-            MainNavigation(
-                navigator = navigator,
-                navActionManager = navActionManager,
-                isCompactScreen = true,
-                isLoggedIn = isLoggedIn,
-                deepLink = deepLink,
-                homeTab = homeTab,
-                padding = padding,
-            )
-        } else {
-            Row(
-                modifier = Modifier.padding(padding)
-            ) {
-                MainNavigationRail(
-                    navigator = navigator,
-                    onItemSelected = { event?.saveLastTab(it) },
-                    modifier = Modifier.safeDrawingPadding(),
-                )
                 MainNavigation(
                     navigator = navigator,
-                    navActionManager = navActionManager,
-                    isCompactScreen = false,
+                    isCompactScreen = true,
                     isLoggedIn = isLoggedIn,
                     deepLink = deepLink,
                     homeTab = homeTab,
-                    padding = WindowInsets.navigationBarsIgnoringVisibility.asPaddingValues(),
+                    padding = padding,
                 )
+            } else {
+                Row(
+                    modifier = Modifier.padding(padding)
+                ) {
+                    MainNavigationRail(
+                        navigator = navigator,
+                        onItemSelected = { event?.saveLastTab(it) },
+                    )
+                    MainNavigation(
+                        navigator = navigator,
+                        isCompactScreen = false,
+                        isLoggedIn = isLoggedIn,
+                        deepLink = deepLink,
+                        homeTab = homeTab,
+                    )
+                }
             }
+            ReportDrawn()
         }
-        ReportDrawn()
     }
 }
 

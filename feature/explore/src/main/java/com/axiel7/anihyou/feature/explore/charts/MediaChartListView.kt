@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -27,8 +28,9 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.axiel7.anihyou.core.common.utils.NumberUtils.format
 import com.axiel7.anihyou.core.network.type.MediaFormat
-import com.axiel7.anihyou.core.ui.common.navigation.NavActionManager
-import com.axiel7.anihyou.core.ui.common.navigation.Routes
+import com.axiel7.anihyou.core.ui.common.LocalBlurAdult
+import com.axiel7.anihyou.core.ui.common.LocalNavActionManager
+import com.axiel7.anihyou.core.ui.common.navigation.Route
 import com.axiel7.anihyou.core.ui.common.rememberSnackbarManager
 import com.axiel7.anihyou.core.ui.composables.DefaultScaffoldWithMediumTopAppBar
 import com.axiel7.anihyou.core.ui.composables.common.BackIconButton
@@ -37,7 +39,6 @@ import com.axiel7.anihyou.core.ui.composables.list.OnBottomReached
 import com.axiel7.anihyou.core.ui.composables.media.MediaItemHorizontal
 import com.axiel7.anihyou.core.ui.composables.media.MediaItemHorizontalPlaceholder
 import com.axiel7.anihyou.core.ui.theme.AniHyouTheme
-import com.axiel7.anihyou.core.ui.utils.ImageUtils.LocalBlurAdult
 import com.axiel7.anihyou.feature.editmedia.EditMediaSheet
 import org.koin.compose.viewmodel.koinViewModel
 import org.koin.core.parameter.parametersOf
@@ -45,8 +46,7 @@ import org.koin.core.parameter.parametersOf
 @Composable
 fun MediaChartListView(
     isLoggedIn: Boolean,
-    arguments: Routes.MediaChartList,
-    navActionManager: NavActionManager
+    arguments: Route.MediaChartList,
 ) {
     val viewModel: MediaChartViewModel = koinViewModel(parameters = { parametersOf(arguments) })
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -55,17 +55,17 @@ fun MediaChartListView(
         isLoggedIn = isLoggedIn,
         uiState = uiState,
         event = viewModel,
-        navActionManager = navActionManager,
     )
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun MediaChartListContent(
     isLoggedIn: Boolean,
     uiState: MediaChartUiState,
     event: MediaChartEvent?,
-    navActionManager: NavActionManager,
 ) {
+    val navActionManager = LocalNavActionManager.current
     val blurAdult = LocalBlurAdult.current
     val topAppBarScrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior(
         rememberTopAppBarState()
@@ -123,6 +123,11 @@ private fun MediaChartListContent(
                     score = item.meanScore ?: 0,
                     format = item.format ?: MediaFormat.UNKNOWN__,
                     year = item.startDate?.year,
+                    mediaStatus = item.status,
+                    episodes = item.episodes,
+                    chapters = item.chapters,
+                    duration = item.duration,
+                    genres = item.genres?.filterNotNull(),
                     onClick = {
                         navActionManager.toMediaDetails(item.id)
                     },
@@ -163,7 +168,6 @@ private fun MediaChartListViewPreview() {
                 isLoggedIn = true,
                 uiState = MediaChartUiState(),
                 event = null,
-                navActionManager = NavActionManager.rememberNavActionManager(),
             )
         }
     }

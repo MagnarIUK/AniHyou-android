@@ -20,6 +20,7 @@ import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -48,8 +49,9 @@ import com.axiel7.anihyou.core.model.ListStyle
 import com.axiel7.anihyou.core.model.genre.SelectableGenre.Companion.genreTagLocalized
 import com.axiel7.anihyou.core.network.SeasonalAnimeQuery
 import com.axiel7.anihyou.core.resources.R
-import com.axiel7.anihyou.core.ui.common.navigation.NavActionManager
-import com.axiel7.anihyou.core.ui.common.navigation.Routes
+import com.axiel7.anihyou.core.ui.common.LocalBlurAdult
+import com.axiel7.anihyou.core.ui.common.LocalNavActionManager
+import com.axiel7.anihyou.core.ui.common.navigation.Route
 import com.axiel7.anihyou.core.ui.common.rememberSnackbarManager
 import com.axiel7.anihyou.core.ui.composables.DefaultScaffoldWithMediumTopAppBar
 import com.axiel7.anihyou.core.ui.composables.common.BackIconButton
@@ -63,7 +65,6 @@ import com.axiel7.anihyou.core.ui.composables.media.MediaItemVerticalPlaceholder
 import com.axiel7.anihyou.core.ui.composables.scores.SmallScoreIndicator
 import com.axiel7.anihyou.core.ui.theme.AniHyouTheme
 import com.axiel7.anihyou.core.ui.utils.ComposeDateUtils.secondsToLegibleText
-import com.axiel7.anihyou.core.ui.utils.ImageUtils.LocalBlurAdult
 import com.axiel7.anihyou.feature.editmedia.EditMediaSheet
 import com.axiel7.anihyou.feature.explore.season.composables.SeasonChartFilterSheet
 import org.koin.compose.viewmodel.koinViewModel
@@ -72,8 +73,7 @@ import org.koin.core.parameter.parametersOf
 @Composable
 fun SeasonAnimeView(
     isLoggedIn: Boolean,
-    arguments: Routes.SeasonAnime,
-    navActionManager: NavActionManager
+    arguments: Route.SeasonAnime,
 ) {
     val viewModel: SeasonAnimeViewModel = koinViewModel(parameters = { parametersOf(arguments) })
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -82,17 +82,17 @@ fun SeasonAnimeView(
         isLoggedIn = isLoggedIn,
         uiState = uiState,
         event = viewModel,
-        navActionManager = navActionManager,
     )
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun SeasonAnimeContent(
     isLoggedIn: Boolean,
     uiState: SeasonAnimeUiState,
     event: SeasonAnimeEvent?,
-    navActionManager: NavActionManager,
 ) {
+    val navActionManager = LocalNavActionManager.current
     val topAppBarScrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior(
         rememberTopAppBarState()
     )
@@ -332,7 +332,6 @@ private fun SeasonAnimeViewPreview() {
                 isLoggedIn = true,
                 uiState = SeasonAnimeUiState(),
                 event = null,
-                navActionManager = NavActionManager.rememberNavActionManager(),
             )
         }
     }

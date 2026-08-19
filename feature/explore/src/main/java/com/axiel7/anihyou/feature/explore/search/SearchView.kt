@@ -61,14 +61,16 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.axiel7.anihyou.core.model.SearchType
-import com.axiel7.anihyou.core.model.genre.SelectableGenre
+import com.axiel7.anihyou.core.model.genre.Genre
+import com.axiel7.anihyou.core.model.genre.Tag
 import com.axiel7.anihyou.core.model.media.MediaSortSearch
 import com.axiel7.anihyou.core.network.type.MediaFormat
 import com.axiel7.anihyou.core.network.type.MediaSort
 import com.axiel7.anihyou.core.network.type.MediaType
 import com.axiel7.anihyou.core.resources.R
-import com.axiel7.anihyou.core.ui.common.navigation.NavActionManager
-import com.axiel7.anihyou.core.ui.common.navigation.Routes
+import com.axiel7.anihyou.core.ui.common.LocalBlurAdult
+import com.axiel7.anihyou.core.ui.common.LocalNavActionManager
+import com.axiel7.anihyou.core.ui.common.navigation.Route
 import com.axiel7.anihyou.core.ui.common.rememberSnackbarManager
 import com.axiel7.anihyou.core.ui.composables.common.BackIconButton
 import com.axiel7.anihyou.core.ui.composables.common.ErrorDialogHandler
@@ -82,7 +84,6 @@ import com.axiel7.anihyou.core.ui.composables.media.MediaItemHorizontalPlacehold
 import com.axiel7.anihyou.core.ui.composables.person.PersonItemHorizontal
 import com.axiel7.anihyou.core.ui.composables.person.PersonItemHorizontalPlaceholder
 import com.axiel7.anihyou.core.ui.theme.AniHyouTheme
-import com.axiel7.anihyou.core.ui.utils.ImageUtils.LocalBlurAdult
 import com.axiel7.anihyou.feature.editmedia.EditMediaSheet
 import com.axiel7.anihyou.feature.explore.search.composables.MediaSearchCountryChip
 import com.axiel7.anihyou.feature.explore.search.composables.MediaSearchDateChip
@@ -99,11 +100,11 @@ import org.koin.core.parameter.parametersOf
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun SearchView(
-    arguments: Routes.Search,
+    arguments: Route.Search,
     isLoggedIn: Boolean,
     modifier: Modifier = Modifier,
-    navActionManager: NavActionManager,
 ) {
+    val navActionManager = LocalNavActionManager.current
     val keyboardController = LocalSoftwareKeyboardController.current
     val viewModel: SearchViewModel = koinViewModel(parameters = { parametersOf(arguments, isLoggedIn) })
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -176,7 +177,6 @@ fun SearchView(
                 initialTag = arguments.tag,
                 uiState = uiState,
                 event = viewModel,
-                navActionManager = navActionManager,
             )
         }//:Column
     }//:Surface
@@ -191,8 +191,8 @@ fun SearchContentView(
     initialTag: String?,
     uiState: SearchUiState,
     event: SearchEvent?,
-    navActionManager: NavActionManager,
 ) {
+    val navActionManager = LocalNavActionManager.current
     val blurAdult = LocalBlurAdult.current
     val scope = rememberCoroutineScope()
     val snackbarManager = rememberSnackbarManager()
@@ -206,7 +206,7 @@ fun SearchContentView(
         }
     }
 
-    var showMoreFilters by rememberSaveable { mutableStateOf(true) }
+    var showMoreFilters by rememberSaveable { mutableStateOf(false) }
 
     val haptic = LocalHapticFeedback.current
     var showEditSheet by rememberSaveable { mutableStateOf(false) }
@@ -331,6 +331,11 @@ fun SearchContentView(
                             score = item.meanScore ?: 0,
                             format = item.format ?: MediaFormat.UNKNOWN__,
                             year = item.startDate?.year,
+                            mediaStatus = item.status,
+                            episodes = item.episodes,
+                            chapters = item.chapters,
+                            duration = item.duration,
+                            genres = item.genres?.filterNotNull(),
                             onClick = {
                                 navActionManager.toMediaDetails(item.id)
                             },
@@ -497,8 +502,8 @@ private fun MoreFilters(
         setDuration = { event?.setDuration(it) },
     )
     MediaSearchGenresChips(
-        externalGenre = initialGenre?.let { SelectableGenre(name = it) },
-        externalTag = initialTag?.let { SelectableGenre(name = it) },
+        externalGenre = initialGenre?.let { Genre(it) },
+        externalTag = initialTag?.let { Tag(it) },
         clearedFilters = uiState.clearedFilters,
         onGenreTagStateChanged = { event?.onGenreTagStateChanged(it) },
     )
@@ -536,7 +541,6 @@ private fun SearchPreview() {
                     isLoggedIn = false
                 ),
                 event = null,
-                navActionManager = NavActionManager.rememberNavActionManager()
             )
         }
     }

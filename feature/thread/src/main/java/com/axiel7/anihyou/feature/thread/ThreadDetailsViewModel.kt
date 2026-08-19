@@ -7,7 +7,7 @@ import com.axiel7.anihyou.core.common.viewmodel.PagedUiStateViewModel
 import com.axiel7.anihyou.core.domain.repository.DefaultPreferencesRepository
 import com.axiel7.anihyou.core.domain.repository.LikeRepository
 import com.axiel7.anihyou.core.domain.repository.ThreadRepository
-import com.axiel7.anihyou.core.ui.common.navigation.Routes
+import com.axiel7.anihyou.core.ui.common.navigation.Route
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filter
@@ -16,10 +16,11 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import org.koin.core.annotation.InjectedParam
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class ThreadDetailsViewModel(
-    private val arguments: Routes.ThreadDetails,
+    @InjectedParam private val arguments: Route.ThreadDetails,
     defaultPreferencesRepository: DefaultPreferencesRepository,
     private val threadRepository: ThreadRepository,
     private val likeRepository: LikeRepository,

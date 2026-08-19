@@ -1,7 +1,5 @@
 package com.axiel7.anihyou.feature.profile
 
-import androidx.activity.compose.LocalActivity
-import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -18,6 +16,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.material3.Button
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButtonDefaults
@@ -51,12 +50,12 @@ import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.LocalViewModelStoreOwner
 import com.axiel7.anihyou.core.model.user.hexColor
 import com.axiel7.anihyou.core.resources.ColorUtils.colorFromHex
 import com.axiel7.anihyou.core.resources.R
+import com.axiel7.anihyou.core.ui.common.LocalNavActionManager
 import com.axiel7.anihyou.core.ui.common.navigation.NavActionManager
-import com.axiel7.anihyou.core.ui.common.navigation.Routes
+import com.axiel7.anihyou.core.ui.common.navigation.Route
 import com.axiel7.anihyou.core.ui.composables.ConnectedButtonGroup
 import com.axiel7.anihyou.core.ui.composables.TopBannerView
 import com.axiel7.anihyou.core.ui.composables.common.BackIconButton
@@ -64,7 +63,6 @@ import com.axiel7.anihyou.core.ui.composables.common.ErrorDialogHandler
 import com.axiel7.anihyou.core.ui.composables.common.ShareIconButton
 import com.axiel7.anihyou.core.ui.composables.common.singleClick
 import com.axiel7.anihyou.core.ui.composables.defaultPlaceholder
-import com.axiel7.anihyou.core.ui.composables.markdown.MarkdownUriHandler
 import com.axiel7.anihyou.core.ui.composables.person.PERSON_IMAGE_SIZE_SMALL
 import com.axiel7.anihyou.core.ui.composables.person.PersonImage
 import com.axiel7.anihyou.core.ui.theme.AniHyouTheme
@@ -80,10 +78,8 @@ import org.koin.core.parameter.parametersOf
 
 @Composable
 fun ProfileView(
-    arguments: Routes.UserDetails,
+    arguments: Route.UserDetails,
     modifier: Modifier = Modifier,
-    uriHandler: MarkdownUriHandler,
-    navActionManager: NavActionManager,
 ) {
     val viewModel: ProfileViewModel = if (arguments.id == null && arguments.userName == null)
         koinActivityViewModel { parametersOf(arguments) }
@@ -94,19 +90,17 @@ fun ProfileView(
         uiState = uiState,
         event = viewModel,
         modifier = modifier,
-        uriHandler = uriHandler,
-        navActionManager = navActionManager,
     )
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun ProfileContent(
     uiState: ProfileUiState,
     event: ProfileEvent?,
     modifier: Modifier = Modifier,
-    uriHandler: MarkdownUriHandler,
-    navActionManager: NavActionManager,
 ) {
+    val navActionManager = LocalNavActionManager.current
     var selectedTabIndex by rememberSaveable { mutableIntStateOf(0) }
     val topAppBarScrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior(
         rememberTopAppBarState()
@@ -218,8 +212,6 @@ private fun ProfileContent(
                             uiState = uiState,
                             event = event,
                             modifier = Modifier.nestedScroll(topAppBarScrollBehavior.nestedScrollConnection),
-                            uriHandler = uriHandler,
-                            navActionManager = navActionManager,
                         )
                     }
 
@@ -227,21 +219,19 @@ private fun ProfileContent(
                         UserStatsView(
                             userId = uiState.userInfo.id,
                             nestedScrollConnection = topAppBarScrollBehavior.nestedScrollConnection,
-                            navActionManager = navActionManager,
                         )
 
                     ProfileInfoType.FAVORITES ->
                         UserFavoritesView(
                             userId = uiState.userInfo.id,
+                            isMyProfile = uiState.isMyProfile,
                             modifier = Modifier.nestedScroll(topAppBarScrollBehavior.nestedScrollConnection),
-                            navActionManager = navActionManager,
                         )
 
                     ProfileInfoType.SOCIAL ->
                         UserSocialView(
                             userId = uiState.userInfo.id,
                             modifier = Modifier.nestedScroll(topAppBarScrollBehavior.nestedScrollConnection),
-                            navActionManager = navActionManager,
                         )
                 }
             }
@@ -350,8 +340,6 @@ private fun ProfileViewPreview() {
             ProfileContent(
                 uiState = ProfileUiState(isMyProfile = false),
                 event = null,
-                uriHandler = MarkdownUriHandler(),
-                navActionManager = NavActionManager.rememberNavActionManager()
             )
         }
     }

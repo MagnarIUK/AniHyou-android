@@ -54,7 +54,7 @@ val exampleBasicMediaListEntry = BasicMediaListEntry(
     id = 1,
     mediaId = 1,
     status = MediaListStatus.CURRENT,
-    score = 77.0,
+    score = 7.7,
     advancedScores = null,
     progress = 999,
     progressVolumes = null,
@@ -64,6 +64,7 @@ val exampleBasicMediaListEntry = BasicMediaListEntry(
     private = false,
     hiddenFromStatusLists = false,
     notes = "This is a note",
+    priority = 0
 )
 
 val exampleCommonMediaListEntry = CommonMediaListEntry(

@@ -4,8 +4,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.remember
 import com.axiel7.anihyou.core.model.CurrentListType
+import com.axiel7.anihyou.core.model.FavoritesType
 import com.axiel7.anihyou.core.model.media.AnimeSeason
 import com.axiel7.anihyou.core.model.media.ChartType
+import com.axiel7.anihyou.core.model.thread.ChildComment
 import com.axiel7.anihyou.core.network.type.MediaSeason
 import com.axiel7.anihyou.core.network.type.MediaSort
 import com.axiel7.anihyou.core.network.type.MediaType
@@ -15,61 +17,73 @@ import com.axiel7.anihyou.core.network.type.ScoreFormat
 class NavActionManager(
     private val navigator: INavigator,
 ) {
+    fun navigate(route: Route) {
+        navigator.navigate(route)
+    }
+
     fun goBack() {
         navigator.goBack()
     }
 
     fun toMediaDetails(id: Int) {
-        navigator.navigate(Routes.MediaDetails(id))
+        navigator.navigate(Route.MediaDetails(id))
     }
 
     fun toMediaActivity(mediaId: Int) {
-        navigator.navigate(Routes.MediaActivity(mediaId))
+        navigator.navigate(Route.MediaActivity(mediaId))
+    }
+
+    fun toMediaCharacters(mediaId: Int) {
+        navigator.navigate(Route.MediaCharacters(mediaId))
     }
 
     fun toCharacterDetails(id: Int) {
-        navigator.navigate(Routes.CharacterDetails(id))
+        navigator.navigate(Route.CharacterDetails(id))
     }
 
     fun toStaffDetails(id: Int) {
-        navigator.navigate(Routes.StaffDetails(id))
+        navigator.navigate(Route.StaffDetails(id))
     }
 
     fun toStudioDetails(id: Int) {
-        navigator.navigate(Routes.StudioDetails(id))
+        navigator.navigate(Route.StudioDetails(id))
     }
 
     fun toUserDetails(id: Int) {
-        navigator.navigate(Routes.UserDetails(id = id, userName = null))
+        navigator.navigate(Route.UserDetails(id = id, userName = null))
     }
 
     fun toUserDetails(userId: Int?, username: String?) {
-        navigator.navigate(Routes.UserDetails(userId, username))
+        navigator.navigate(Route.UserDetails(userId, username))
     }
 
     fun toActivityDetails(id: Int) {
-        navigator.navigate(Routes.ActivityDetails(id))
+        navigator.navigate(Route.ActivityDetails(id))
     }
 
     fun toThreadDetails(id: Int) {
-        navigator.navigate(Routes.ThreadDetails(id))
+        navigator.navigate(Route.ThreadDetails(id))
+    }
+
+    fun toThreadCommentDetails(childComment: ChildComment) {
+        navigator.navigate(Route.ThreadCommentDetails(childComment))
     }
 
     fun toReviewDetails(id: Int) {
-        navigator.navigate(Routes.ReviewDetails(id))
+        navigator.navigate(Route.ReviewDetails(id))
     }
 
     fun toFullscreenImage(url: String) {
-        navigator.navigate(Routes.FullScreenImage(url))
+        navigator.navigate(Route.FullScreenImage(url))
     }
 
     fun toSearch() {
-        navigator.navigate(Routes.Search(focus = true))
+        navigator.navigate(Route.Search(focus = true))
     }
 
     fun toSearchOnMyList(mediaType: MediaType) {
         navigator.navigate(
-            Routes.Search(mediaType = mediaType.rawValue, onList = true, focus = true)
+            Route.Search(mediaType = mediaType.rawValue, onList = true, focus = true)
         )
     }
 
@@ -79,13 +93,13 @@ class NavActionManager(
         tag: String?
     ) {
         navigator.navigate(
-            Routes.Search(mediaType = mediaType.rawValue, genre = genre, tag = tag)
+            Route.Search(mediaType = mediaType.rawValue, genre = genre, tag = tag)
         )
     }
 
     fun toAnimeSeason(season: AnimeSeason) {
         navigator.navigate(
-            Routes.SeasonAnime(season = season.season.rawValue, year = season.year)
+            Route.SeasonAnime(season = season.season.rawValue, year = season.year)
         )
     }
 
@@ -99,26 +113,26 @@ class NavActionManager(
     }
 
     fun toCalendar() {
-        navigator.navigate(Routes.Calendar)
+        navigator.navigate(Route.Calendar)
     }
 
     fun toCurrentFullList(listType: CurrentListType) {
-        navigator.navigate(Routes.CurrentFullList(listType = listType))
+        navigator.navigate(Route.CurrentFullList(listType = listType))
     }
 
     fun toExplore(mediaType: MediaType, mediaSort: MediaSort) {
         navigator.navigate(
-            Routes.Search(mediaType = mediaType.rawValue, mediaSort = mediaSort.rawValue)
+            Route.Search(mediaType = mediaType.rawValue, mediaSort = mediaSort.rawValue)
         )
     }
 
     fun toNotifications(unread: Int = 0) {
-        navigator.navigate(Routes.Notifications(unread))
+        navigator.navigate(Route.Notifications(unread))
     }
 
     fun toPublishNewActivity() {
         navigator.navigate(
-            Routes.PublishActivity(activityId = null, id = null, text = null)
+            Route.PublishActivity(activityId = null, id = null, text = null)
         )
     }
 
@@ -128,7 +142,7 @@ class NavActionManager(
         text: String?
     ) {
         navigator.navigate(
-            Routes.PublishActivity(activityId = activityId, id = replyId, text = text)
+            Route.PublishActivity(activityId = activityId, id = replyId, text = text)
         )
     }
 
@@ -138,7 +152,7 @@ class NavActionManager(
         text: String?
     ) {
         navigator.navigate(
-            Routes.PublishComment(threadId = threadId, id = commentId ?: 0, text = text)
+            Route.PublishComment(threadId = threadId, id = commentId ?: 0, text = text)
         )
     }
 
@@ -149,7 +163,7 @@ class NavActionManager(
         text: String?
     ) {
         navigator.navigate(
-            Routes.PublishComment(
+            Route.PublishComment(
                 threadId = threadId,
                 parentCommentId = parentCommentId,
                 id = commentId ?: 0,
@@ -159,7 +173,7 @@ class NavActionManager(
     }
 
     fun toMediaChart(type: ChartType) {
-        navigator.navigate(Routes.MediaChartList(type.name))
+        navigator.navigate(Route.MediaChartList(type.name))
     }
 
     fun toUserMediaList(
@@ -168,7 +182,7 @@ class NavActionManager(
         scoreFormat: ScoreFormat
     ) {
         navigator.navigate(
-            Routes.UserMediaList(
+            Route.UserMediaList(
                 mediaType = mediaType.rawValue,
                 userId = userId,
                 scoreFormat = scoreFormat.rawValue
@@ -177,25 +191,45 @@ class NavActionManager(
     }
 
     fun toSettings() {
-        navigator.navigate(Routes.Settings)
+        navigator.navigate(Route.Settings)
     }
 
     fun toListStyleSettings() {
-        navigator.navigate(Routes.ListStyleSettings)
+        navigator.navigate(Route.ListStyleSettings)
     }
 
     fun toCustomLists() {
-        navigator.navigate(Routes.CustomLists)
+        navigator.navigate(Route.CustomLists)
     }
 
     fun toTranslations() {
-        navigator.navigate(Routes.Translations)
+        navigator.navigate(Route.Translations)
+    }
+
+    fun toReorderFavorites(
+        userId: Int,
+        type: FavoritesType
+    ) {
+        navigator.navigate(
+            Route.ReorderFavorites(
+                userId = userId,
+                type = type
+            )
+        )
+    }
+
+    fun toContributors() {
+        navigator.navigate(Route.Contributors)
+    }
+
+    fun toPriorityColors() {
+        navigator.navigate(Route.PriorityColors)
     }
 
     companion object {
         @Composable
         fun rememberNavActionManager(
-            navigator: INavigator = PreviewNavigator()
+            navigator: INavigator
         ) = remember {
             NavActionManager(navigator)
         }

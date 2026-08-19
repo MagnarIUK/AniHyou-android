@@ -50,6 +50,10 @@ interface SettingsEvent : UiEvent {
 
     fun setBlurAdultContent(value: Boolean)
 
+    fun setShowLowPriority(value: Boolean)
+
+    fun setHideScores(value: Boolean)
+
     fun setTranslatorApp(value: TranslatorApp)
 
     fun setTitleLanguage(value: UserTitleLanguage)
@@ -57,6 +61,8 @@ interface SettingsEvent : UiEvent {
     fun setStaffNameLanguage(value: UserStaffNameLanguage)
 
     fun setScoreFormat(value: ScoreFormat)
+
+    fun setScoreStep(value: Double)
 
     fun setDefaultTab(value: DefaultTab)
 

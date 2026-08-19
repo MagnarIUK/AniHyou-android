@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -30,8 +31,9 @@ import com.axiel7.anihyou.core.common.utils.StringUtils.htmlStripped
 import com.axiel7.anihyou.core.model.review.userRatingsString
 import com.axiel7.anihyou.core.network.type.ReviewRating
 import com.axiel7.anihyou.core.resources.R
-import com.axiel7.anihyou.core.ui.common.navigation.NavActionManager
-import com.axiel7.anihyou.core.ui.common.navigation.Routes
+import com.axiel7.anihyou.core.ui.common.LocalIsLanguageEn
+import com.axiel7.anihyou.core.ui.common.LocalNavActionManager
+import com.axiel7.anihyou.core.ui.common.navigation.Route
 import com.axiel7.anihyou.core.ui.composables.DefaultScaffoldWithSmallTopAppBar
 import com.axiel7.anihyou.core.ui.composables.TextSubtitleVertical
 import com.axiel7.anihyou.core.ui.composables.common.BackIconButton
@@ -42,14 +44,12 @@ import com.axiel7.anihyou.core.ui.composables.common.TranslateIconButton
 import com.axiel7.anihyou.core.ui.composables.defaultPlaceholder
 import com.axiel7.anihyou.core.ui.composables.webview.HtmlWebView
 import com.axiel7.anihyou.core.ui.theme.AniHyouTheme
-import com.axiel7.anihyou.core.ui.utils.LocaleUtils.LocalIsLanguageEn
 import org.koin.compose.viewmodel.koinViewModel
 import org.koin.core.parameter.parametersOf
 
 @Composable
 fun ReviewDetailsView(
-    arguments: Routes.ReviewDetails,
-    navActionManager: NavActionManager
+    arguments: Route.ReviewDetails,
 ) {
     val viewModel: ReviewDetailsViewModel = koinViewModel(parameters = { parametersOf(arguments) })
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -57,16 +57,16 @@ fun ReviewDetailsView(
     ReviewDetailsContent(
         uiState = uiState,
         event = viewModel,
-        navActionManager = navActionManager,
     )
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun ReviewDetailsContent(
     uiState: ReviewDetailsUiState,
     event: ReviewDetailsEvent?,
-    navActionManager: NavActionManager,
 ) {
+    val navActionManager = LocalNavActionManager.current
     val isEnglishLocale = LocalIsLanguageEn.current
     val topAppBarScrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior(
         rememberTopAppBarState()
@@ -176,7 +176,6 @@ private fun ReviewDetailsViewPreview() {
             ReviewDetailsContent(
                 uiState = ReviewDetailsUiState(),
                 event = null,
-                navActionManager = NavActionManager.rememberNavActionManager()
             )
         }
     }

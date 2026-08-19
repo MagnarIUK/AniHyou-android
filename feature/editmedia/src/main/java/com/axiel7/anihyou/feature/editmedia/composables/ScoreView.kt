@@ -4,16 +4,18 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import com.axiel7.anihyou.core.model.maxValue
 import com.axiel7.anihyou.core.network.type.ScoreFormat
+import com.axiel7.anihyou.core.ui.common.LocalScoreFormat
 import com.axiel7.anihyou.core.ui.composables.scores.FiveStarRatingView
 import com.axiel7.anihyou.core.ui.composables.scores.RatingView
 import com.axiel7.anihyou.core.ui.composables.scores.SmileyRatingView
 
 @Composable
 fun ScoreView(
-    format: ScoreFormat,
     rating: Double?,
     onRatingChanged: (Double?) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    format: ScoreFormat = LocalScoreFormat.current,
+    increments: Double = 1.0
 ) {
     when (format) {
         ScoreFormat.POINT_10,
@@ -25,7 +27,8 @@ fun ScoreView(
                 showIcon = true,
                 rating = rating,
                 showAsDecimal = format == ScoreFormat.POINT_10_DECIMAL,
-                onRatingChanged = onRatingChanged
+                onRatingChanged = onRatingChanged,
+                increments = increments
             )
         }
 

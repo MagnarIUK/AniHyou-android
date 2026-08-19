@@ -1,13 +1,16 @@
-package com.axiel7.anihyou.feature.thread.composables
+package com.axiel7.anihyou.feature.thread.comment
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -20,24 +23,74 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.navigation3.runtime.result.ResultEffect
 import com.axiel7.anihyou.core.common.utils.DateUtils.timestampIntervalSinceNow
 import com.axiel7.anihyou.core.common.utils.StringUtils.htmlStripped
 import com.axiel7.anihyou.core.model.TranslatorApp
 import com.axiel7.anihyou.core.model.thread.ChildComment
+import com.axiel7.anihyou.core.network.fragment.CommonThreadComment
 import com.axiel7.anihyou.core.resources.R
+import com.axiel7.anihyou.core.ui.common.LocalIsLanguageEn
+import com.axiel7.anihyou.core.ui.common.LocalNavActionManager
+import com.axiel7.anihyou.core.ui.common.navigation.Route
+import com.axiel7.anihyou.core.ui.composables.DefaultScaffoldWithSmallTopAppBar
 import com.axiel7.anihyou.core.ui.composables.TextIconHorizontal
+import com.axiel7.anihyou.core.ui.composables.common.BackIconButton
 import com.axiel7.anihyou.core.ui.composables.common.FavoriteIconButton
 import com.axiel7.anihyou.core.ui.composables.common.ReplyButton
 import com.axiel7.anihyou.core.ui.composables.common.TranslateIconButton
 import com.axiel7.anihyou.core.ui.composables.defaultPlaceholder
 import com.axiel7.anihyou.core.ui.composables.markdown.DefaultMarkdownText
-import com.axiel7.anihyou.core.ui.composables.markdown.MarkdownUriHandler
 import com.axiel7.anihyou.core.ui.composables.person.PersonItemSmall
 import com.axiel7.anihyou.core.ui.theme.AniHyouTheme
 import com.axiel7.anihyou.core.ui.utils.ComposeDateUtils.secondsToLegibleText
-import com.axiel7.anihyou.core.ui.utils.LocaleUtils.LocalIsLanguageEn
+import com.axiel7.anihyou.feature.thread.composables.ChildCommentView
 import kotlinx.coroutines.launch
+import org.koin.compose.viewmodel.koinViewModel
 import java.time.temporal.ChronoUnit
+
+@Composable
+fun ThreadCommentDetailsView(
+    arguments: Route.ThreadCommentDetails,
+) {
+    val navActionManager = LocalNavActionManager.current
+    val viewModel: ThreadCommentViewModel = koinViewModel()
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val scrollState = rememberScrollState()
+
+    ResultEffect<CommonThreadComment> {
+        viewModel.onCommentPublished(it)
+    }
+
+    DefaultScaffoldWithSmallTopAppBar(
+        title = "",
+        navigationIcon = { BackIconButton(onClick = navActionManager::goBack) },
+        scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(scrollableState = scrollState)
+    ) { padding ->
+        ThreadCommentView(
+            id = arguments.childComment.id,
+            body = arguments.childComment.comment.orEmpty(),
+            username = arguments.childComment.user?.name.orEmpty(),
+            avatarUrl = arguments.childComment.user?.avatar?.medium,
+            likeCount = arguments.childComment.likeCount,
+            isLiked = arguments.childComment.isLiked == true,
+            isLocked = arguments.childComment.isLocked,
+            createdAt = arguments.childComment.createdAt,
+            childComments = arguments.childComment.childComments,
+            translatorApp = uiState.translatorApp,
+            toggleLike = { viewModel.toggleLikeComment(it) },
+            navigateToUserDetails = {
+                arguments.childComment.user?.id?.let(navActionManager::toUserDetails)
+            },
+            navigateToDetails = navActionManager::toThreadCommentDetails,
+            navigateToPublishReply = navActionManager::toPublishThreadComment,
+            modifier = Modifier
+                .padding(padding)
+                .verticalScroll(scrollState),
+        )
+    }
+}
 
 @Composable
 fun ThreadCommentView(
@@ -53,14 +106,15 @@ fun ThreadCommentView(
     translatorApp: TranslatorApp,
     toggleLike: suspend (Int) -> Boolean,
     navigateToUserDetails: () -> Unit,
+    navigateToDetails: (ChildComment) -> Unit,
     navigateToPublishReply: (parentCommentId: Int, Int?, String?) -> Unit,
-    uriHandler: MarkdownUriHandler,
+    modifier: Modifier = Modifier,
 ) {
     val isEnglishLocale = LocalIsLanguageEn.current
     val scope = rememberCoroutineScope()
     var isLikedState by remember { mutableStateOf(isLiked) }
     Column(
-        modifier = Modifier
+        modifier = modifier
             .padding(
                 start = 16.dp,
                 top = 16.dp,
@@ -85,16 +139,14 @@ fun ThreadCommentView(
                         maxUnit = ChronoUnit.WEEKS,
                         isFutureDate = false
                     ),
-                color = MaterialTheme.colorScheme.outline,
-                fontSize = 14.sp
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                style = MaterialTheme.typography.labelMedium
             )
         }
         DefaultMarkdownText(
             markdown = body,
             modifier = Modifier.padding(vertical = 8.dp),
-            fontSize = 15.sp,
-            lineHeight = 15.sp,
-            uriHandler = uriHandler,
+            textStyle = MaterialTheme.typography.bodyMedium,
         )
         Row(
             modifier = Modifier.align(Alignment.End)
@@ -127,8 +179,8 @@ fun ThreadCommentView(
                 translatorApp = translatorApp,
                 toggleLike = toggleLike,
                 navigateToUserDetails = navigateToUserDetails,
+                navigateToDetails = navigateToDetails,
                 navigateToPublishReply = navigateToPublishReply,
-                uriHandler = uriHandler,
             )
         }
     }
@@ -192,8 +244,8 @@ private fun ThreadCommentViewPreview() {
                     translatorApp = TranslatorApp.DEFAULT,
                     toggleLike = { true },
                     navigateToUserDetails = {},
+                    navigateToDetails = {},
                     navigateToPublishReply = { _, _, _ -> },
-                    uriHandler = MarkdownUriHandler(),
                 )
                 ThreadCommentViewPlaceholder()
             }

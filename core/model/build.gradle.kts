@@ -1,6 +1,7 @@
 plugins {
     alias(libs.plugins.android.library)
     alias(libs.plugins.jetbrains.kotlin.compose)
+    alias(libs.plugins.jetbrains.kotlin.serialization)
 }
 
 val appPackageName: String by rootProject.extra
@@ -42,6 +43,8 @@ dependencies {
     implementation(libs.androidx.ui)
     implementation(libs.androidx.ui.graphics)
     implementation(libs.androidx.material3)
+
+    testImplementation(libs.junit)
 
     coreLibraryDesugaring(libs.desugar.jdk.libs)
 }

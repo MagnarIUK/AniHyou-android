@@ -60,11 +60,18 @@ dependencies {
 
     implementation(libs.haze.blur)
 
+    implementation(libs.zoomable)
+
+    implementation(libs.compose.colorpicker)
+
     implementation(libs.markdown.renderer)
     implementation(libs.markdown.renderer.material3)
     implementation(libs.markdown.renderer.coil3)
 
     coreLibraryDesugaring(libs.desugar.jdk.libs)
+
+    testImplementation(libs.mockk)
+    testImplementation(libs.junit)
 
     debugImplementation(libs.ui.tooling)
 }

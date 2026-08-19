@@ -10,6 +10,7 @@ import com.axiel7.anihyou.core.network.BasicMediaDetailsQuery
 import com.axiel7.anihyou.core.network.GenreTagCollectionQuery
 import com.axiel7.anihyou.core.network.MediaActivityQuery
 import com.axiel7.anihyou.core.network.MediaCharactersAndStaffQuery
+import com.axiel7.anihyou.core.network.MediaCharactersQuery
 import com.axiel7.anihyou.core.network.MediaChartQuery
 import com.axiel7.anihyou.core.network.MediaDetailsQuery
 import com.axiel7.anihyou.core.network.MediaFollowingQuery
@@ -18,6 +19,7 @@ import com.axiel7.anihyou.core.network.MediaReviewsQuery
 import com.axiel7.anihyou.core.network.MediaSortedQuery
 import com.axiel7.anihyou.core.network.MediaStatsQuery
 import com.axiel7.anihyou.core.network.MediaThreadsQuery
+import com.axiel7.anihyou.core.network.SaveRecommendationMutation
 import com.axiel7.anihyou.core.network.SearchMediaQuery
 import com.axiel7.anihyou.core.network.SeasonalAnimeQuery
 import com.axiel7.anihyou.core.network.api.model.AnimeSeasonDto
@@ -29,6 +31,7 @@ import com.axiel7.anihyou.core.network.type.MediaSort
 import com.axiel7.anihyou.core.network.type.MediaSource
 import com.axiel7.anihyou.core.network.type.MediaStatus
 import com.axiel7.anihyou.core.network.type.MediaType
+import com.axiel7.anihyou.core.network.type.RecommendationRating
 import com.axiel7.anihyou.core.network.type.ThreadSort
 
 class MediaApi(
@@ -270,7 +273,7 @@ class MediaApi(
                 page = Optional.present(page),
                 perPage = Optional.present(perPage),
                 mediaCategoryId = Optional.present(mediaId),
-                sort = Optional.present(listOf(ThreadSort.CREATED_AT_DESC))
+                sort = Optional.present(listOf(ThreadSort.ID_DESC))
             )
         )
 
@@ -284,6 +287,19 @@ class MediaApi(
             MediaActivityQuery(
                 mediaId = Optional.present(mediaId),
                 userId = Optional.presentIfNotNull(userId),
+                page = Optional.present(page),
+                perPage = Optional.present(perPage),
+            )
+        )
+
+    fun mediaCharactersQuery(
+        mediaId: Int,
+        page: Int,
+        perPage: Int,
+    ) = client
+        .query(
+            MediaCharactersQuery(
+                mediaId = Optional.present(mediaId),
                 page = Optional.present(page),
                 perPage = Optional.present(perPage),
             )
@@ -314,6 +330,18 @@ class MediaApi(
         .query(
             BasicMediaDetailsQuery(
                 mediaId = Optional.present(mediaId)
+            )
+        )
+    fun saveRecommendationMutation(
+        mediaId: Int,
+        mediaRecommendationId: Int,
+        rating: RecommendationRating?
+    ) = client
+        .mutation(
+            SaveRecommendationMutation(
+                mediaId = Optional.present(mediaId),
+                mediaRecommendationId = Optional.present(mediaRecommendationId),
+                rating = Optional.present(rating)
             )
         )
 }

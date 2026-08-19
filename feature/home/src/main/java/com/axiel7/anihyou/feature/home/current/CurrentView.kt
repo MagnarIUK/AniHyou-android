@@ -43,9 +43,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.axiel7.anihyou.core.model.CurrentListType
 import com.axiel7.anihyou.core.model.media.exampleCommonMediaListEntry
 import com.axiel7.anihyou.core.network.fragment.CommonMediaListEntry
-import com.axiel7.anihyou.core.network.type.ScoreFormat
 import com.axiel7.anihyou.core.resources.R
-import com.axiel7.anihyou.core.ui.common.navigation.NavActionManager
+import com.axiel7.anihyou.core.ui.common.LocalNavActionManager
 import com.axiel7.anihyou.core.ui.common.rememberSnackbarManager
 import com.axiel7.anihyou.core.ui.composables.common.ErrorDialogHandler
 import com.axiel7.anihyou.core.ui.composables.list.HorizontalListHeader
@@ -60,7 +59,6 @@ import org.koin.compose.viewmodel.koinActivityViewModel
 @Composable
 fun CurrentView(
     isLoggedIn: Boolean,
-    navActionManager: NavActionManager,
     modifier: Modifier = Modifier,
 ) {
     val viewModel: CurrentViewModel = koinActivityViewModel()
@@ -70,7 +68,6 @@ fun CurrentView(
         isLoggedIn = isLoggedIn,
         uiState = uiState,
         event = viewModel,
-        navActionManager = navActionManager,
         modifier = modifier,
     )
 }
@@ -81,9 +78,9 @@ private fun CurrentContent(
     isLoggedIn: Boolean,
     uiState: CurrentUiState,
     event: CurrentEvent?,
-    navActionManager: NavActionManager,
     modifier: Modifier = Modifier,
 ) {
+    val navActionManager = LocalNavActionManager.current
     val haptic = LocalHapticFeedback.current
     val pullRefreshState = rememberPullToRefreshState()
     val snackbarManager = rememberSnackbarManager()
@@ -107,7 +104,6 @@ private fun CurrentContent(
         SetScoreDialog(
             onDismiss = { event?.toggleSetScoreDialog(false) },
             onConfirm = { event?.setScore(it) },
-            scoreFormat = uiState.scoreFormat,
         )
     }
 
@@ -146,7 +142,6 @@ private fun CurrentContent(
 
                         CurrentLazyGrid(
                             items = list,
-                            scoreFormat = uiState.scoreFormat,
                             isLoading = uiState.isLoading,
                             isPlusEnabled = !uiState.isLoadingPlusOne,
                             onClick = { navActionManager.toMediaDetails(it.mediaId) },
@@ -183,7 +178,6 @@ private fun CurrentContent(
 @Composable
 private fun CurrentLazyGrid(
     items: List<CommonMediaListEntry>,
-    scoreFormat: ScoreFormat,
     isLoading: Boolean,
     isPlusEnabled: Boolean,
     onClick: (CommonMediaListEntry) -> Unit,
@@ -213,7 +207,6 @@ private fun CurrentLazyGrid(
             CurrentListItem(
                 modifier = Modifier.width(350.dp),
                 item = item,
-                scoreFormat = scoreFormat,
                 isPlusEnabled = isPlusEnabled,
                 onClick = { onClick(item) },
                 onLongClick = { onLongClick(item) },
@@ -253,7 +246,6 @@ private fun CurrentViewPreview() {
                     mangaList = exampleList
                 ),
                 event = null,
-                navActionManager = NavActionManager.rememberNavActionManager(),
             )
         }
     }

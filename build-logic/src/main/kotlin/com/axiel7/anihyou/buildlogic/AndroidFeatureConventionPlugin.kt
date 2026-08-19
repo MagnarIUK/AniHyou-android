@@ -10,12 +10,14 @@ import org.gradle.kotlin.dsl.dependencies
 import org.gradle.kotlin.dsl.getByType
 import org.jetbrains.kotlin.gradle.dsl.KotlinAndroidProjectExtension
 
+@Suppress("unused")
 class AndroidFeatureConventionPlugin : Plugin<Project> {
     override fun apply(target: Project) {
         with(target) {
             with(pluginManager) {
                 apply("com.android.library")
                 apply("org.jetbrains.kotlin.plugin.compose")
+                apply("io.insert-koin.compiler.plugin")
             }
 
             val libs = extensions.getByType<VersionCatalogsExtension>().find("libs").get()
@@ -55,6 +57,7 @@ class AndroidFeatureConventionPlugin : Plugin<Project> {
                 add("implementation", libs.findLibrary("androidx-material3").get())
 
                 add("implementation", platform(libs.findLibrary("koin-bom").get()))
+                add("implementation", libs.findLibrary("koin-annotations").get())
                 add("implementation", libs.findLibrary("koin-compose").get())
                 add("implementation", libs.findLibrary("koin-compose-viewmodel").get())
                 add("implementation", libs.findLibrary("koin-compose-navigation3").get())
